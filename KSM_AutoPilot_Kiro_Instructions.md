@@ -1,4 +1,4 @@
-# KSM AutoPilot — Kiro Project Instructions and Implementation Specification
+# KSM AutoPilot — Project Instructions and Implementation Specification
 
 **Document purpose:** This is the authoritative project instruction file for Kiro. Use it as the primary implementation guide when creating, modifying, testing, and deploying KSM AutoPilot.
 
