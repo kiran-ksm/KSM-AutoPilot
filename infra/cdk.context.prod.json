@@ -1,0 +1,9 @@
+{
+  "deploy_env": "prod",
+  "comment": "CDK context for the production environment. Do not commit real account IDs.",
+  "availability-zones:account=REPLACE_ACCOUNT_ID:region=us-east-1": [
+    "us-east-1a",
+    "us-east-1b",
+    "us-east-1c"
+  ]
+}

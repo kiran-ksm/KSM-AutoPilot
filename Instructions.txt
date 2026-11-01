@@ -1,0 +1,37 @@
+
+MANDATORY TECHNOLOGY AND IMPLEMENTATION OVERRIDES
+
+These requirements supersede any conflicting technology choices in earlier project documentation.
+1. Frontend must use React + TypeScript + Vite.
+2. Use Material UI for responsive UI components.
+3. Backend must use Python AWS Lambda functions.
+4. All static frontend hosting must use Amazon S3 + CloudFront.
+5. S3 bucket must remain private and use CloudFront Origin Access Control.
+6. Do not use AWS Amplify Hosting.
+7. Do not use EC2, ECS, containers or an always-running application server.
+8. API communication must use API Gateway REST APIs. Configure API Gateway with CORS enabled to strictly allow requests only from the CloudFront distribution domain.
+9. Database must use DynamoDB. All tables must utilize a single-table design pattern where possible to optimize multi-tenant lookups and index access cost efficiently.
+10. Authentication must use Amazon Cognito.
+11. Infrastructure must use AWS CDK written in Python.
+12. All pages must be responsive and mobile-first.
+13. Implement shared Python modules for database access, authorization, validation, logging, AI and messaging. Structure these as an AWS Lambda Layer to prevent duplicate code distribution across functions.
+14. Implement frontend API services separately from React components.
+15. Configure separate development, staging and production environments.
+16. Never hardcode AWS account IDs, region-specific resource identifiers, credentials, bucket names or distribution IDs.
+17. Use environment-specific configuration and CDK stack outputs.
+18. Configure CloudFront SPA routing and appropriate caching. Ensure a custom Error Response is configured in CloudFront to route 404/403 errors back to index.html for handling React Router navigation natively.
+19. Enable HTTPS.
+20. Include automated tests and deployment scripts.
+21. Do not expose backend AWS credentials or service secrets in frontend code.
+22. Implement DEMO_MODE to simulate SMS and email without sending real messages. When DEMO_MODE is true, mock API calls must log payloads directly to a dedicated dashboard event console component rather than calling external communication SDKs.
+23. Enforce tenant authorization in Python backend functions, never relying on frontend filtering.
+24. Optimize for low operating cost and shared multi-dealership hosting.
+25. Enforce structured JSON logging (using python-json-logger or AWS Lambda Powertools) across all backend Lambda functions to allow clean debugging and analytical dashboards inside Amazon CloudWatch.
+26. All generative AI features built via Amazon Bedrock must use dedicated Guardrails for Amazon Bedrock to strictly prevent model drift, toxic inputs, or exposure of private customer datasets.
+IMPLEMENTATION ORDER:
+Phase 1: React application, responsive layouts, public lead form and demo dashboard.
+Phase 2: Python Lambda APIs, DynamoDB and Cognito.
+Phase 3: AI lead scoring using Bedrock.
+Phase 4: SMS and email integration.
+Phase 5: Follow-up automation and inbound messaging.
+Phase 6: CDK deployment, S3 + CloudFront hosting, automated tests and documentation.

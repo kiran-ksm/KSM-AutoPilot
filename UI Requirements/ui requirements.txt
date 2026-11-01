@@ -1,0 +1,139 @@
+# KSM AutoPilot – UI/UX Design System Requirements
+
+## 1. Design Direction
+Create a premium, modern, enterprise-grade automotive SaaS platform. The visual style should combine luxury automotive branding, modern CRM usability and clean enterprise software design.
+
+The default theme must be Premium Light. Support an optional Dark theme.
+
+## 2. Technology
+- React + TypeScript + Vite
+- Material UI (MUI)
+- Inter typography
+- Lucide icons
+- Responsive desktop, tablet and mobile layouts
+- Centralized theme configuration
+- Reusable design system components
+
+## 3. Light Theme Colors
+- App background: #F8FAFC
+- Surface/card: #FFFFFF
+- Primary text: #0F172A
+- Secondary text: #64748B
+- Border: #E2E8F0
+- Primary action: #2563EB
+- Success: #15803D
+- Warning: #B45309
+- Error: #DC2626
+
+## 4. Dark Theme Colors
+- App background: #0B1220
+- Surface/card: #172235
+- Primary text: #F8FAFC
+- Secondary text: #94A3B8
+- Border: #263449
+- Primary action: #60A5FA
+- Success: #4ADE80
+- Warning: #FBBF24
+- Error: #F87171
+
+## 5. Component Standards
+- Standard card radius: 12px
+- Input radius: 8px
+- Button radius: 8px
+- Consistent 8px spacing system
+- Subtle borders and restrained shadows
+- Consistent icon size and stroke weight
+- Accessible contrast and visible focus indicators
+- No unnecessary gradients, neon colors or glowing effects
+
+## 6. Dashboard
+Create a sales-oriented dashboard with:
+- Total leads
+- Hot leads
+- Appointments requested and confirmed
+- Average first response time
+- Lead conversion rate
+- Lead source breakdown
+- Lead activity timeline
+- Priority follow-up queue
+- Salesperson performance
+
+All metrics must be calculated from actual application data. Do not hardcode dashboard metrics.
+
+## 7. Lead Management
+Create a premium CRM lead table with:
+- Customer name and contact details
+- Interested vehicle
+- Dealership and salesperson
+- Lead source
+- Lead priority
+- Lead status
+- Last activity
+- Next follow-up
+- Search, sort and filters
+
+Use restrained semantic status indicators rather than large solid-color blocks.
+
+## 8. Customer 360 Profile
+Create a dedicated customer detail experience containing:
+- Customer contact information
+- Vehicle interests
+- Browsing activity where collection and use are authorized
+- Inquiry history
+- SMS and email conversation history
+- AI-generated customer interest summary
+- Appointment requests and confirmations
+- Salesperson notes
+- Follow-up tasks
+
+Use a chronological activity timeline.
+
+## 9. Inventory Presentation
+Vehicle cards must support:
+- Vehicle image
+- Year, make, model and trim
+- Price and mileage
+- VIN or stock number
+- Dealership location
+- Inventory source and last synchronized time
+- Availability status from the authoritative inventory source
+
+Clearly distinguish cached inventory information from freshly verified availability.
+
+## 10. Responsive Design
+Desktop:
+- Persistent navigation sidebar
+- Multi-column dashboard
+- Full data tables
+
+Tablet:
+- Collapsible navigation
+- Two-column dashboard where space permits
+
+Mobile:
+- Compact navigation drawer
+- Single-column cards
+- Mobile-friendly lead details and forms
+- No horizontal overflow at 360px viewport width
+- Touch-friendly controls
+
+## 11. UX Principles
+- Prioritize sales actions over decorative visualizations.
+- Make overdue follow-ups immediately visible.
+- Allow users to access a lead's full history quickly.
+- Keep important actions within one or two clicks.
+- Show loading, empty, error and success states.
+- Provide confirmation before destructive operations.
+- Use realistic synthetic data only in demo mode.
+- Ensure all controls and navigation are functional.
+
+## 12. Implementation Instructions
+Before implementing, inspect the existing React application and identify all current pages and shared components.
+
+Create centralized light and dark MUI theme definitions. Build reusable components for metric cards, status indicators, lead tables, vehicle cards, activity timelines, filters and navigation.
+
+Apply the design consistently across all application pages. Do not redesign only the dashboard while leaving other screens with the old styling.
+
+Preserve all existing backend functionality, API contracts, authentication, responsive behavior and business logic. Do not replace working functionality with static mockups.
+
+Run the application at desktop, tablet and mobile viewport sizes and verify all major workflows.

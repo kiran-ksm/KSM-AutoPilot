@@ -1,0 +1,212 @@
+name: KSM AutoPilot — Deploy
+
+on:
+  push:
+    branches:
+      - main          # triggers prod deploy
+      - staging       # triggers staging deploy
+      - develop       # triggers dev deploy
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'dev'
+        type: choice
+        options: [dev, staging, prod]
+
+permissions:
+  id-token: write   # OIDC for AWS assume-role (no long-lived keys)
+  contents: read
+
+jobs:
+  # ─── Resolve target environment ─────────────────────────────────────────────
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      env_name: ${{ steps.resolve.outputs.env_name }}
+    steps:
+      - name: Resolve environment
+        id: resolve
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "env_name=${{ inputs.environment }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref_name }}" = "main" ]; then
+            echo "env_name=prod" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref_name }}" = "staging" ]; then
+            echo "env_name=staging" >> $GITHUB_OUTPUT
+          else
+            echo "env_name=dev" >> $GITHUB_OUTPUT
+          fi
+
+  # ─── Frontend build + test ───────────────────────────────────────────────────
+  frontend:
+    needs: setup
+    runs-on: ubuntu-latest
+    env:
+      ENV_NAME: ${{ needs.setup.outputs.env_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Lint
+        run: npm run lint
+        working-directory: frontend
+
+      - name: Unit tests
+        run: npm run test
+        working-directory: frontend
+
+      - name: Build
+        env:
+          VITE_AWS_REGION:           ${{ secrets[format('VITE_AWS_REGION_{0}', env.ENV_NAME)] || 'us-east-1' }}
+          VITE_COGNITO_USER_POOL_ID: ${{ secrets[format('VITE_COGNITO_USER_POOL_ID_{0}', env.ENV_NAME)] }}
+          VITE_COGNITO_CLIENT_ID:    ${{ secrets[format('VITE_COGNITO_CLIENT_ID_{0}', env.ENV_NAME)] }}
+          VITE_API_BASE_URL:         ${{ secrets[format('VITE_API_BASE_URL_{0}', env.ENV_NAME)] }}
+          VITE_DEMO_MODE:            ${{ env.ENV_NAME != 'prod' && 'true' || 'false' }}
+          VITE_APP_ENV:              ${{ env.ENV_NAME }}
+        run: npm run build
+        working-directory: frontend
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist-${{ env.ENV_NAME }}
+          path: frontend/dist/
+          retention-days: 1
+
+  # ─── Backend tests ───────────────────────────────────────────────────────────
+  backend:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install layer deps
+        run: pip install -r requirements.txt
+        working-directory: backend/layer
+
+      - name: Install test deps
+        run: pip install -r requirements-test.txt
+        working-directory: tests/backend
+
+      - name: Run backend tests
+        run: pytest tests/backend -v --tb=short
+        working-directory: .
+
+  # ─── CDK deploy ──────────────────────────────────────────────────────────────
+  infra:
+    needs: [setup, frontend, backend]
+    runs-on: ubuntu-latest
+    env:
+      ENV_NAME: ${{ needs.setup.outputs.env_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install CDK deps
+        run: pip install -r requirements.txt
+        working-directory: infra
+
+      - name: Install Node for CDK CLI
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install CDK CLI
+        run: npm install -g aws-cdk@2.140.0
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets[format('AWS_DEPLOY_ROLE_ARN_{0}', env.ENV_NAME)] }}
+          aws-region: us-east-1
+
+      - name: CDK bootstrap (idempotent)
+        run: cdk bootstrap --context deploy_env=${{ env.ENV_NAME }}
+        working-directory: infra
+
+      - name: CDK deploy all stacks
+        run: >
+          cdk deploy "KsmAp-${{ env.ENV_NAME }}-*"
+          --require-approval never
+          --context deploy_env=${{ env.ENV_NAME }}
+          --outputs-file ../cdk-outputs-${{ env.ENV_NAME }}.json
+        working-directory: infra
+
+      - name: Export CDK outputs as env file
+        run: python scripts/export_env.py --env ${{ env.ENV_NAME }}
+
+      - name: Upload CDK outputs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cdk-outputs-${{ env.ENV_NAME }}
+          path: cdk-outputs-${{ env.ENV_NAME }}.json
+          retention-days: 7
+
+  # ─── Frontend S3 sync + CloudFront invalidation ──────────────────────────────
+  deploy_frontend:
+    needs: [setup, infra]
+    runs-on: ubuntu-latest
+    env:
+      ENV_NAME: ${{ needs.setup.outputs.env_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist-${{ env.ENV_NAME }}
+          path: frontend/dist
+
+      - name: Download CDK outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: cdk-outputs-${{ env.ENV_NAME }}
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets[format('AWS_DEPLOY_ROLE_ARN_{0}', env.ENV_NAME)] }}
+          aws-region: us-east-1
+
+      - name: Extract bucket name and distribution ID from CDK outputs
+        id: outputs
+        run: |
+          BUCKET=$(jq -r '."KsmAp-${{ env.ENV_NAME }}-Foundation".BucketName' \
+            cdk-outputs-${{ env.ENV_NAME }}.json)
+          DIST_ID=$(jq -r '."KsmAp-${{ env.ENV_NAME }}-Foundation".DistributionId' \
+            cdk-outputs-${{ env.ENV_NAME }}.json)
+          echo "bucket=$BUCKET" >> $GITHUB_OUTPUT
+          echo "dist_id=$DIST_ID" >> $GITHUB_OUTPUT
+
+      - name: Sync frontend to S3
+        run: |
+          aws s3 sync frontend/dist/ s3://${{ steps.outputs.outputs.bucket }}/ \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable" \
+            --exclude "index.html"
+          # index.html must never be cached — it references hashed asset filenames
+          aws s3 cp frontend/dist/index.html s3://${{ steps.outputs.outputs.bucket }}/index.html \
+            --cache-control "no-cache, no-store, must-revalidate"
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ steps.outputs.outputs.dist_id }} \
+            --paths "/*"

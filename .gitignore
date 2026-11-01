@@ -1,0 +1,39 @@
+# Node / Frontend
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+
+# Python / CDK
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+cdk.out/
+*.egg-info/
+.pytest_cache/
+
+# CDK
+cdk.context.json
+# Per-env context files with real account IDs (generated locally)
+infra/cdk.context.*.local.json
+
+# Generated .env files with real values — NEVER commit these
+frontend/.env.*.local
+backend/.env.*.local
+.env.local
+
+# AWS
+.aws-sam/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp

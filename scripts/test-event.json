@@ -1,0 +1,1 @@
+{"httpMethod":"POST","path":"/leads","pathParameters":{},"queryStringParameters":{},"headers":{"Content-Type":"application/json"},"body":"{\"firstName\":\"Test\",\"lastName\":\"Probe\",\"email\":\"probe@test.com\",\"phone\":\"0400000000\",\"vehicleInterest\":\"Sedan\"}","stageVariables":{"tenantId":"tenant-dev-001"}}

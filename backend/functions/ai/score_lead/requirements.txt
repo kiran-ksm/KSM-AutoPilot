@@ -1,0 +1,3 @@
+# Dependencies provided by the KSM Common Lambda Layer.
+# This file is intentionally empty — do not add packages here.
+# Add shared dependencies to backend/layer/requirements.txt instead.

@@ -1,0 +1,40 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyNonHTTPS",
+      "Effect": "Deny",
+      "Principal": { "AWS": "*" },
+      "Action": "s3:*",
+      "Resource": [
+        "arn:aws:s3:::ksmap-dev-foundation-frontendbucketefe2e19c-jzwgyrpcizln",
+        "arn:aws:s3:::ksmap-dev-foundation-frontendbucketefe2e19c-jzwgyrpcizln/*"
+      ],
+      "Condition": { "Bool": { "aws:SecureTransport": "false" } }
+    },
+    {
+      "Sid": "AllowAutoDeleteRole",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::180471758000:role/KsmAp-dev-Foundation-CustomS3AutoDeleteObjectsCusto-RPOjxLb9tVl8"
+      },
+      "Action": ["s3:PutBucketPolicy","s3:GetBucket*","s3:List*","s3:DeleteObject*"],
+      "Resource": [
+        "arn:aws:s3:::ksmap-dev-foundation-frontendbucketefe2e19c-jzwgyrpcizln",
+        "arn:aws:s3:::ksmap-dev-foundation-frontendbucketefe2e19c-jzwgyrpcizln/*"
+      ]
+    },
+    {
+      "Sid": "AllowCloudFrontOAC",
+      "Effect": "Allow",
+      "Principal": { "Service": "cloudfront.amazonaws.com" },
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::ksmap-dev-foundation-frontendbucketefe2e19c-jzwgyrpcizln/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:SourceArn": "arn:aws:cloudfront::180471758000:distribution/E3SSP1VI3FNP8G"
+        }
+      }
+    }
+  ]
+}

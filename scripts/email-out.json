@@ -1,0 +1,1 @@
+{"statusCode": 200, "headers": {"Access-Control-Allow-Origin": "https://d26x1mouwd2br3.cloudfront.net", "Access-Control-Allow-Headers": "Content-Type,Authorization", "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS", "Content-Type": "application/json"}, "body": "{\"messageId\": \"010001a1968f1062-ebfdbe35-4049-48bb-8424-b271d5efb30f-000000\", \"status\": \"SENT\"}"}
